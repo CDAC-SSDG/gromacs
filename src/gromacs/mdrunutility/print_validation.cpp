@@ -110,6 +110,9 @@ void logValidationMessages(const MDLogger&            mdlog,
                                        "PME GPU decomposition with the AMD HIP GPU backend");
     validationPendingFeatures.appendIf(simulationWorkload.useGpuNonbondedFE,
                                        "Non-bonded free-energy calculations on the GPU");
+    validationPendingFeatures.appendIf(
+            GMX_SYCL_PARAS && deviceInfo != nullptr && deviceInfo->deviceVendor != DeviceVendor::Amd,
+            "ParaS SYCL GPU backend on a non-AMD platform");    
     // TODO MdModules doesn't have a way to report which
     // ForceProviders are active (nor have they even been built at
     // this point of mdrunner())

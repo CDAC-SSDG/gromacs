@@ -226,6 +226,10 @@ static gmx::GpuAwareMpiStatus getDeviceGpuAwareMpiStatus(const sycl::backend bac
         case sycl::backend::cuda: return gmx::checkMpiCudaAwareSupport();
         case sycl::backend::hip: return gmx::checkMpiHipAwareSupport();
         case sycl::backend::level_zero: return gmx::checkMpiZEAwareSupport();
+#elif GMX_SYCL_PARAS
+        case sycl::backend::cuda: return gmx::checkMpiCudaAwareSupport();
+        case sycl::backend::hip: return gmx::checkMpiHipAwareSupport();
+        case sycl::backend::level_zero: return gmx::checkMpiZEAwareSupport();
 #endif
         default: return gmx::GpuAwareMpiStatus::NotSupported;
     }
@@ -294,7 +298,8 @@ static DeviceStatus isDeviceCompatible(const sycl::device&           syclDevice,
 #elif GMX_GPU_NB_CLUSTER_SIZE == 8
 #    if GMX_SYCL_ACPP && !(GMX_ACPP_HAVE_HIP_TARGET) && !GMX_ACPP_HAVE_GENERIC_TARGET
         const std::vector<int> compiledNbnxmSubGroupSizes{ 32 }; // Only NVIDIA
-#    elif GMX_SYCL_ACPP && (GMX_ACPP_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT) && !GMX_ACPP_HAVE_GENERIC_TARGET
+#    elif GMX_SYCL_ACPP && (GMX_ACPP_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT) && !GMX_ACPP_HAVE_GENERIC_TARGET \
+        || (GMX_SYCL_PARAS && (GMX_PARAS_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT))
         const std::vector<int> compiledNbnxmSubGroupSizes{ 64 }; // Only AMD GCN and CDNA
 #    else
         const std::vector<int> compiledNbnxmSubGroupSizes{ 32, 64 };
@@ -310,7 +315,8 @@ static DeviceStatus isDeviceCompatible(const sycl::device&           syclDevice,
                          compiledNbnxmSubGroupSizes.end(),
                          subGroupSizeSupportedByDevice))
         {
-#if GMX_SYCL_ACPP && GMX_ACPP_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT
+#if GMX_SYCL_ACPP && GMX_ACPP_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT \
+||  (GMX_SYCL_PARAS && GMX_PARAS_HAVE_HIP_TARGET && !GMX_ENABLE_AMD_RDNA_SUPPORT)
             if (supportedSubGroupSizes.size() == 1 && supportedSubGroupSizes[0] == 32
                 && deviceVendor == DeviceVendor::Amd)
             {

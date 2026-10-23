@@ -65,6 +65,16 @@ static const sycl::property_list sc_syclDiscardEventProperty_list{
 } // namespace internal
 #endif
 
+#if GMX_SYCL_PARAS
+    #if PARAS_CUDA_BACKEND
+        constexpr sycl::backend sc_syclBackend = sycl::backend::cuda;
+    #elif PARAS_HIP_BACKEND
+        constexpr sycl::backend sc_syclBackend = sycl::backend::hip;
+    #else
+        constexpr sycl::backend sc_syclBackend = sycl::backend::host;
+    #endif
+#endif
+
 #if GMX_SYCL_ENABLE_HANDLER_FREE_SUBMISSION
 using CommandGroupHandler = std::nullptr_t;
 #else
@@ -256,6 +266,8 @@ static inline void syclEnqueueCustomOp(sycl::handler& cgh, CommandGroupFunc&& cg
     cgh.hipSYCL_enqueue_custom_operation(std::move(cgf));
 #elif defined(SYCL_EXT_ONEAPI_ENQUEUE_NATIVE_COMMAND) && GMX_SYCL_ENABLE_EXPERIMENTAL_SUBMIT_API
     cgh.ext_codeplay_enqueue_native_command([=](sycl::interop_handle h) { cgf(h); });
+#elif defined(PARAS_EXT_ENQUEUE_CUSTOM_OPERATION)
+    cgh.parasSYCL_enqueue_custom_operation(std::move(cgf));
 #else
     GMX_UNUSED_VALUE(cgh);
     GMX_UNUSED_VALUE(cgf);

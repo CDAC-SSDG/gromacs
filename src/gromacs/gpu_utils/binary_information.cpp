@@ -112,6 +112,8 @@ std::string getSyclVersion()
 #        endif
 #    elif GMX_SYCL_ACPP
     return hipsycl::sycl::detail::version_string();
+#    elif GMX_SYCL_PARAS
+    return "ParaS SYCL";
 #    else
     GMX_THROW(gmx::InternalError("Not implemented for this SYCL build"));
 #    endif
@@ -145,7 +147,7 @@ std::string getSyclCompilerVersion()
     }
 }
 
-#endif // GMX_SYCL_DPCPP || GMX_SYCL_ACPP
+#endif // GMX_SYCL_DPCPP || GMX_SYCL_ACPP || GMX_SYCL_PARAS
 
 #if GMX_GPU_HIP
 std::string getHipDriverAndRuntimeVersionString()
@@ -187,6 +189,10 @@ const char* getGpuImplementationString()
             else if (GMX_SYCL_ACPP)
             {
                 return "SYCL (AdaptiveCpp)";
+            }
+            else if (GMX_SYCL_PARAS)
+            {
+                return "SYCL (ParaS)";
             }
             else
             {
@@ -247,7 +253,14 @@ std::unordered_map<std::string, std::string> gpuDescriptions()
     descriptions["HIP compiler"] = HIP_COMPILER_INFO;
     descriptions["HIP compiler flags"] =
             std::string(HIP_COMPILER_FLAGS) + " " + CMAKE_BUILD_CONFIGURATION_CXX_FLAGS;
-    descriptions["HIP driver/runtime"] = getHipDriverAndRuntimeVersionString();
+    descriptions["HIP driver/runtime"]= getHipDriverAndRuntimeVersionString();
+#elif GMX_SYCL_PARAS
+    descriptions["SYCL version"]        = getSyclCompilerVersion();
+    descriptions["SYCL compiler"]       = "ParaS SYCL";
+    descriptions["SYCL compiler flags"] = "Available in CMake cache";
+    descriptions["SYCL GPU flags"]      = "Available in CMake cache";
+    descriptions["SYCL targets"]        = "ParaS Native Targets";
+
 #endif
     return descriptions;
 };

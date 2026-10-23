@@ -277,6 +277,15 @@
 // Define if AdaptiveCpp has generic target
 #cmakedefine01 GMX_ACPP_HAVE_GENERIC_TARGET
 
+// Define if ParaS is used for SYCL support 
+#cmakedefine01 GMX_SYCL_PARAS 
+ 
+// Define if ParaS has CUDA target(s) 
+#cmakedefine01 GMX_PARAS_HAVE_CUDA_TARGET 
+ 
+// Define if ParaS has HIP target(s) 
+#cmakedefine01 GMX_PARAS_HAVE_HIP_TARGET 
+
 // Define if AdaptiveCpp/HIP should have AMD RDNA support (32-wide execution)
 #cmakedefine01 GMX_ENABLE_AMD_RDNA_SUPPORT
 

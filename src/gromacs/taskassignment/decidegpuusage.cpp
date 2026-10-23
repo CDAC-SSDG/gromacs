@@ -123,6 +123,13 @@ const char* const g_specifyEverythingFormatString =
         // For instance selecting the AMD GPU with ID 0:
         // ACPP_VISIBILITY_MASK=hip ROCR_VISIBLE_DEVICES=0
         "ACPP_VISIBILITY_MASK"
+        
+        // This is for ParaS Compiler 
+#    elif GMX_GPU_SYCL && GMX_SYCL_PARAS && GMX_PARAS_HAVE_HIP_TARGET
+        "ROCR_VISIBLE_DEVICES"
+#    elif GMX_GPU_SYCL && GMX_SYCL_PARAS && GMX_PARAS_HAVE_CUDA_TARGET
+        "CUDA_VISIBLE_DEVIES"
+
 #    else
 #        error "Unreachable branch"
 #    endif

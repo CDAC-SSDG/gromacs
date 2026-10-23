@@ -81,8 +81,12 @@ static constexpr unsigned int c_cudaFullWarpMask = 0xffffffff;
 #    define SYCL_ASSERT(condition)
 #endif
 
-#if GMX_SYCL_ACPP && ACPP_LIBKERNEL_IS_DEVICE_PASS_HIP
+#if (GMX_SYCL_ACPP && ACPP_LIBKERNEL_IS_DEVICE_PASS_HIP) || (GMX_SYCL_PARAS && PARAS_HIP_BACKEND)
+#if GMX_SYCL_ACPP
 ACPP_UNIVERSAL_TARGET
+#elif GMX_SYCL_PARAS
+GMX_DEVICE_ATTRIBUTE
+#endif
 static inline void atomicAddOptimizedAmd(float gmx_unused* ptr, const float gmx_unused delta)
 {
 #    if defined(__gfx908__) // Special function for AMD MI100
@@ -110,6 +114,13 @@ constexpr bool compilingForHost()
 #    endif
 #endif
     // We need to list all valid device targets here
+
+#if GMX_SYCL_ACPP
+#    ifndef __SYCL_DEVICE_ONLY__
+    return true;
+#    endif
+#endif
+
 #if GMX_SYCL_DPCPP \
         && !(defined(__NVPTX__) || defined(__AMDGCN__) || defined(__SPIR__) || defined(__SPIRV__))
     return true;
@@ -172,9 +183,9 @@ static inline void atomicFetchAdd(T& val, const T delta)
 {
     using sycl::access::address_space;
     // Check if we need/can call the optimized atomicAdd for AMD devices, see #4465.
-    if constexpr (GMX_SYCL_ACPP && std::is_same_v<T, float> && AddressSpace == address_space::global_space)
+    if constexpr ((GMX_SYCL_ACPP || GMX_SYCL_PARAS) && std::is_same_v<T, float> && AddressSpace == address_space::global_space)
     {
-#if GMX_SYCL_ACPP && ACPP_LIBKERNEL_IS_DEVICE_PASS_HIP
+#if (GMX_SYCL_ACPP && ACPP_LIBKERNEL_IS_DEVICE_PASS_HIP) || (GMX_SYCL_PARAS && PARAS_HIP_BACKEND)
         atomicAddOptimizedAmd(&val, delta);
 #else
         atomicAddDefault<T, MemoryScope, AddressSpace>(val, delta);
@@ -265,7 +276,7 @@ static inline void staggeredAtomicAddForce(sycl::global_ptr<Float3> gm_f, Float3
 template<typename T, sycl::memory_scope MemoryScope = sycl::memory_scope::device>
 static inline T atomicLoad(T& val)
 {
-#if GMX_SYCL_ACPP && GMX_ACPP_HAVE_CUDA_TARGET
+#if GMX_SYCL_ACPP && GMX_ACPP_HAVE_CUDA_TARGET || GMX_SYCL_PARAS && GMX_PARAS_HAVE_CUDA_TARGET 
     /* Some versions of Clang do not support atomicLoad in NVPTX backend, and die with ICE,
      * e.g. Clang 14, hipSYCL 0.9.2, CUDA 11.5, Debug:
      * fatal error: error in backend: Cannot select: 0xd870450: i32,ch = AtomicLoad<(load seq_cst (s32) from %ir.27)>.

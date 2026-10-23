@@ -70,7 +70,7 @@ static sycl::property_list makeQueuePropertyList(const bool enableProfiling, Pro
     }
 }
 
-#if GMX_SYCL_ACPP
+#if GMX_SYCL_ACPP || GMX_SYCL_PARAS
 static auto acppPriorityProperty(int value)
 {
 #    if defined(ACPP_EXT_QUEUE_PRIORITY) // Since ACpp 24.06
@@ -111,10 +111,24 @@ static sycl::property_list makeQueuePropertyList(const bool                 enab
             GMX_THROW(gmx::InternalError("cudaDeviceGetStreamPriorityRange failed"));
         }
 #        endif
+#        if GMX_PARAS_HAVE_CUDA_TARGET
+        const auto status = cudaDeviceGetStreamPriorityRange(&lowPrioValue, &highPrioValue);
+        if (status != cudaSuccess)
+        {
+            GMX_THROW(gmx::InternalError("cudaDeviceGetStreamPriorityRange failed"));
+        }
+#        endif
     }
     else if (deviceContext.deviceInfo().deviceVendor == DeviceVendor::Amd)
     {
 #        if GMX_ACPP_HAVE_HIP_TARGET
+        const auto status = hipDeviceGetStreamPriorityRange(&lowPrioValue, &highPrioValue);
+        if (status != hipSuccess)
+        {
+            GMX_THROW(gmx::InternalError("hipDeviceGetStreamPriorityRange failed"));
+        }
+#        endif
+#        if GMX_PARAS_HAVE_HIP_TARGET
         const auto status = hipDeviceGetStreamPriorityRange(&lowPrioValue, &highPrioValue);
         if (status != hipSuccess)
         {
@@ -187,6 +201,16 @@ DeviceStream::~DeviceStream()
 {
 #if GMX_SYCL_ACPP
     // Prevents use-after-free errors in ACpp's CUDA backend during unit tests
+    try
+    {
+        synchronize();
+    }
+    catch (sycl::exception& e)
+    {
+        std::fprintf(stderr, "Error in SYCL queue: %s\n", e.what());
+    }
+#endif
+#if GMX_SYCL_PARAS
     try
     {
         synchronize();

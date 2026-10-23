@@ -248,7 +248,7 @@ if(GMX_GPU STREQUAL SYCL)
         GMX_SYCL
         "SYCL implementation to use for GPU acceleration"
         AUTO
-        DPCPP ACPP AUTO)
+        DPCPP ACPP PARAS AUTO)
     if (GMX_SYCL STREQUAL "AUTO")
         if(GMX_SYCL_HIPSYCL) # Check legacy flag
             message(WARNING "GMX_SYCL_HIPSYCL option is deprecated; please use -DGMX_SYCL=ACPP")
@@ -332,7 +332,7 @@ if (GMX_GPU)
             set(GMX_GPU_FFT_LIBRARY_DEFAULT "clFFT")
         endif()
     elseif(GMX_GPU STREQUAL SYCL)
-        if(GMX_SYCL STREQUAL ACPP)
+        if(GMX_SYCL STREQUAL ACPP OR GMX_SYCL STREQUAL PARAS)
             set(GMX_GPU_FFT_LIBRARY_DEFAULT "VkFFT")
         else()
             set(GMX_GPU_FFT_LIBRARY_DEFAULT "MKL")
@@ -768,7 +768,7 @@ if(GMX_GPU)
             if(${_gmx_gpu_uppercase} STREQUAL "OPENCL")
                 set(_gmx_gpu_nb_cluster_size_value 8)
             elseif(GMX_GPU_SYCL)
-                if (GMX_SYCL_ACPP AND NOT GMX_ACPP_HAVE_LEVELZERO_TARGET)
+                if ((GMX_SYCL_ACPP  || GMX_SYCL_PARAS) AND NOT GMX_ACPP_HAVE_LEVELZERO_TARGET)
                     set(_gmx_gpu_nb_cluster_size_value 8)
                 else()
                     # Either DPC++ or AdaptiveCpp targeting Intel Level0

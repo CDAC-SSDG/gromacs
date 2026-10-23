@@ -86,6 +86,8 @@ public:
         events_ = { deviceStream.stream().hipSYCL_enqueue_custom_operation([=](sycl::interop_handle&) {}) };
 #    elif defined(SYCL_EXT_ONEAPI_ENQUEUE_BARRIER)
         events_ = { deviceStream.stream().ext_oneapi_submit_barrier() };
+#    elif defined(PARAS_EXT_ENQUEUE_CUSTOM_OPERATION)
+        events_ = { deviceStream.stream().parasSYCL_enqueue_custom_operation([=](sycl::interop_handle&) {}) };
 #    else
         // We can do full stream synchronization here, but it's so inefficient we better bail out
 #        error "Either ACPP_EXT_ENQUEUE_CUSTOM_OPERATION or SYCL_EXT_ONEAPI_ENQUEUE_BARRIER is needed"
@@ -103,7 +105,8 @@ public:
 
     inline void enqueueWait(const DeviceStream& deviceStream)
     {
-#    if defined(ACPP_EXT_ENQUEUE_CUSTOM_OPERATION) || defined(HIPSYCL_EXT_ENQUEUE_CUSTOM_OPERATION)
+#    if defined(ACPP_EXT_ENQUEUE_CUSTOM_OPERATION) || defined(HIPSYCL_EXT_ENQUEUE_CUSTOM_OPERATION) \
+        || defined(PARAS_EXT_ENQUEUE_CUSTOM_OPERATION)
         // Submit an empty operation that depends on all the events recorded
         // but avoids returning a (useless) event.
         gmx::syclSubmitWithCghWithoutEvent(deviceStream.stream(),

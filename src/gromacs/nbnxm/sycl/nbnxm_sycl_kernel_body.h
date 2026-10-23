@@ -1069,7 +1069,7 @@ static auto nbnxmKernel(CommandGroupHandler cgh,
 
                             // Ensure distance do not become so small that r^-12 overflows
                             r2 = sycl::max(r2, c_nbnxmMinDistanceSquared);
-#if GMX_SYCL_ACPP
+#if GMX_SYCL_ACPP || GMX_SYCL_PARAS
                             // No fast/native functions in some compilation passes
                             const float rInv = sycl::rsqrt(r2);
 #else
